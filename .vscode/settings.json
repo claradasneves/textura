@@ -3,6 +3,7 @@
   "cmake.configureSettings": {
     "CMAKE_MAKE_PROGRAM": "C:/Qt/Tools/Ninja/ninja.exe"
   },
+  "cmake.cmakePath": "C:/cmake-4.1.0-rc1-windows-x86_64/bin/cmake.exe",
   "cmake.configureArgs": [
     "-DCMAKE_PREFIX_PATH=C:/Qt/6.9.1/mingw_64/lib/cmake"  // ajuste para seu caminho do Qt
   ],
