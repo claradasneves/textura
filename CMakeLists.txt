@@ -19,4 +19,4 @@ add_executable(Math3
     stb_image/stb_image.cpp
 )
 
-target_link_libraries(Math3 glfw3 opengl32)
+target_link_libraries(Math3 opengl32 glfw3)

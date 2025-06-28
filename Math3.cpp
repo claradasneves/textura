@@ -57,6 +57,7 @@ int main()
 
 
     std::filesystem::path path = std::filesystem::current_path();
+
     const std::string pathString = path.string();
 
     glfwInit();
