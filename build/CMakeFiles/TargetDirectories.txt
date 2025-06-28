@@ -1,0 +1,3 @@
+C:/Users/SAMSUNG/Downloads/textura/build/CMakeFiles/Math3.dir
+C:/Users/SAMSUNG/Downloads/textura/build/CMakeFiles/edit_cache.dir
+C:/Users/SAMSUNG/Downloads/textura/build/CMakeFiles/rebuild_cache.dir

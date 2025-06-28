@@ -1,0 +1,17 @@
+{
+  "cmake.generator": "Ninja",
+  "cmake.configureSettings": {
+    "CMAKE_MAKE_PROGRAM": "C:/Qt/Tools/Ninja/ninja.exe"
+  },
+  "cmake.configureArgs": [
+    "-DCMAKE_PREFIX_PATH=C:/Qt/6.9.1/mingw_64/lib/cmake"  // ajuste para seu caminho do Qt
+  ],
+  "cmake.buildDirectory": "${workspaceFolder}/build",
+  "files.associations": {
+    "*.dbclient-js": "javascript",
+    "fstream": "cpp",
+    "string": "cpp",
+    "stdlib.h": "c",
+    "iostream": "cpp"
+  }
+}

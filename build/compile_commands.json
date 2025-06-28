@@ -1,0 +1,20 @@
+[
+{
+  "directory": "C:/Users/SAMSUNG/Downloads/textura/build",
+  "command": "C:\\msys64\\mingw64\\bin\\g++.exe -IC:/Users/SAMSUNG/Downloads/textura/includes -IC:/Users/SAMSUNG/Downloads/textura/stb_image -g -std=gnu++17 -o CMakeFiles\\Math3.dir\\Math3.cpp.obj -c C:\\Users\\SAMSUNG\\Downloads\\textura\\Math3.cpp",
+  "file": "C:\\Users\\SAMSUNG\\Downloads\\textura\\Math3.cpp",
+  "output": "CMakeFiles\\Math3.dir\\Math3.cpp.obj"
+},
+{
+  "directory": "C:/Users/SAMSUNG/Downloads/textura/build",
+  "command": "C:\\msys64\\mingw64\\bin\\gcc.exe -IC:/Users/SAMSUNG/Downloads/textura/includes -IC:/Users/SAMSUNG/Downloads/textura/stb_image -g -o CMakeFiles\\Math3.dir\\glad.c.obj -c C:\\Users\\SAMSUNG\\Downloads\\textura\\glad.c",
+  "file": "C:\\Users\\SAMSUNG\\Downloads\\textura\\glad.c",
+  "output": "CMakeFiles\\Math3.dir\\glad.c.obj"
+},
+{
+  "directory": "C:/Users/SAMSUNG/Downloads/textura/build",
+  "command": "C:\\msys64\\mingw64\\bin\\g++.exe -IC:/Users/SAMSUNG/Downloads/textura/includes -IC:/Users/SAMSUNG/Downloads/textura/stb_image -g -std=gnu++17 -o CMakeFiles\\Math3.dir\\stb_image\\stb_image.cpp.obj -c C:\\Users\\SAMSUNG\\Downloads\\textura\\stb_image\\stb_image.cpp",
+  "file": "C:\\Users\\SAMSUNG\\Downloads\\textura\\stb_image\\stb_image.cpp",
+  "output": "CMakeFiles\\Math3.dir\\stb_image\\stb_image.cpp.obj"
+}
+]
