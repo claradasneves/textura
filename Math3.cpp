@@ -216,7 +216,7 @@ int main()
     //unsigned int imageTexture0 = loadTexture("../textures/ShaderToyTextures/Abstract3.jpg");
     unsigned int imageTexture0 = loadTexture("../textures/ShaderToyTextures/queijo.jpeg");
     unsigned int imageTexture1 = loadTexture("../textures/ShaderToyTextures/wood.jpg");
-    unsigned int imageTexture2 = loadTexture("../textures/ShaderToyTextures/folha.jpeg");
+    unsigned int imageTexture2 = loadTexture("../textures/ShaderToyTextures/folha2.jpeg");
     unsigned int bandeiraTexture01 = loadTexture("../textures/ShaderToyTextures/logo-azul-usp.jpg");
     unsigned int bandeiraTexture02 = loadTexture("../textures/ShaderToyTextures/brasil.png");
     unsigned int bandeiraTexture03 = loadTexture("../textures/ShaderToyTextures/sao-paulo.png");

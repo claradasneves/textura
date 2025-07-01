@@ -2,7 +2,7 @@ in vec3 aColor;
 in vec4 aPosition;
 out vec4 C;
 uniform sampler2D iChannel0;
-uniform sampler2D iChannel1;   //Chao
+uniform sampler2D iChannel1;  //Chao
 uniform sampler2D iChannel2;
 uniform sampler2D iChannel3; // Quadro
 uniform sampler2D iChannel4; // Bandeira USP
@@ -667,8 +667,8 @@ Surface csgObject(vec3 p)
     Surface corte;
     corte.sd = fatia;
     corte.color = vec3(0.0);
-    corte.Ka = 0.5; corte.Kd = 0.7; corte.Ks = 0.0;
-    corte.id = 6;
+    corte.Ka = 0.0; corte.Kd = 0.0; corte.Ks = 0.0;
+    corte.id = -1; // id neutro para corte
 
     Surface resultado = subtractionS(queijo, corte);
 
