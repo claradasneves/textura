@@ -2,9 +2,9 @@ in vec3 aColor;
 in vec4 aPosition;
 out vec4 C;
 uniform sampler2D iChannel0;
-uniform sampler2D iChannel1;
+uniform sampler2D iChannel1;   //Chao
 uniform sampler2D iChannel2;
-uniform sampler2D iChannel3;
+uniform sampler2D iChannel3; // Quadro
 uniform sampler2D iChannel4; // Bandeira USP
 uniform sampler2D iChannel5; // Bandeira Brasil
 uniform sampler2D iChannel6; // Bandeira SP
@@ -956,6 +956,41 @@ Surface getDist(vec3 p)
     Frigideira.id = 11;
     d = unionS(Frigideira, d);
 
+    // --- PRATOS GIRANDO EM TORNO DA FRIGIDEIRA ---
+    float yPratoF = centroFrigideira.y; // mesma altura da frigideira
+    float raioPratoF = 2.0; // raio da órbita dos pratos
+    float angPratoF = iTime * 0.7; // velocidade da rotação
+
+    // Prato 1
+    vec3 pratoF1Pos = centroFrigideira + vec3(
+        raioPratoF * cos(angPratoF),
+        0.0,
+        raioPratoF * sin(angPratoF)
+    );
+
+    // Prato 2 (oposto ao prato 1)
+    vec3 pratoF2Pos = centroFrigideira + vec3(
+        raioPratoF * cos(angPratoF + PI),
+        0.0,
+        raioPratoF * sin(angPratoF + PI)
+    );
+
+    float pratoF1SD = cylinderVerticalDist(p - pratoF1Pos, vec2(0.8, 0.03));
+    Surface PratoF1;
+    PratoF1.sd = pratoF1SD;
+    PratoF1.color = vec3(0.2, 0.2, 0.2);
+    PratoF1.Ka = 0.3; PratoF1.Kd = 0.6; PratoF1.Ks = 0.4;
+    PratoF1.id = 22;
+    d = unionS(PratoF1, d);
+
+    float pratoF2SD = cylinderVerticalDist(p - pratoF2Pos, vec2(0.8, 0.03));
+    Surface PratoF2;
+    PratoF2.sd = pratoF2SD;
+    PratoF2.color = vec3(0.2, 0.2, 0.2);
+    PratoF2.Ka = 0.3; PratoF2.Kd = 0.6; PratoF2.Ks = 0.4;
+    PratoF2.id = 23;
+    d = unionS(PratoF2, d);
+
     // Surface OctPrism;
     // OctPrism.sd = octogonPrismDist(p-vec3( 3.0,0.8,5.0), 0.7, 0.25); OctPrism.id=4;
     // OctPrism.color = vec3(0.4,0.2,0.7); OctPrism.Ka=0.2; OctPrism.Kd=0.7;OctPrism.Ks=0.1;
@@ -1165,26 +1200,14 @@ Surface getDist(vec3 p)
     Parede.id = 100;
     d = unionS(Parede, d);
 
-    // --- QUADRO COM MOLDURA NA FRENTE DA PAREDE ---
-    float quadroY = 1.2; // altura do centro do quadro
+    // --- QUADRO SEM MOLDURA NA FRENTE DA PAREDE ---
+    float quadroY = 1.0; // altura do centro do quadro
     float quadroX = 0.01; // centralizado em X
-    float quadroLargura = 3.0;
-    float quadroAltura = 3.0;
-    float molduraEspessura = 0.1;
+    float quadroLargura = 4.0;
+    float quadroAltura = 4.0;
 
-    // Moldura (box maior)
-    vec3 centroMoldura = vec3(quadroX, 3.0, 20.0); // levemente à frente da parede
-    float molduraSD = boxDist(p - centroMoldura, vec3(quadroLargura/2.0 + molduraEspessura, quadroAltura/2.0 + molduraEspessura, 0.06));
-
-    Surface Moldura;
-    Moldura.sd = molduraSD;
-    Moldura.color = vec3(0.25, 0.15, 0.05); // marrom escuro
-    Moldura.Ka = 0.3; Moldura.Kd = 0.6; Moldura.Ks = 0.2;
-    Moldura.id = 201;
-    d = unionS(Moldura, d);
-
-    // Quadro (box menor, dentro da moldura)
-    vec3 centroQuadro = centroMoldura;
+    // Quadro (box, sem moldura)
+    vec3 centroQuadro = vec3(quadroX, 3.0, 20.0); // levemente à frente da parede
     float quadroSD = boxDist(p - centroQuadro, vec3(quadroLargura/2.0, quadroAltura/2.0, 0.03));
 
     Surface Quadro;
@@ -1193,7 +1216,6 @@ Surface getDist(vec3 p)
     Quadro.Ka = 0.4; Quadro.Kd = 0.7; Quadro.Ks = 0.1;
     Quadro.id = 202;
     d = unionS(Quadro, d);
-
     return d;
 }
 
@@ -1341,7 +1363,16 @@ vec3 getLight(vec3 p,Surface s,vec3 Cam)
         s.color=boxmap(iChannel0,p,N,1.0);
     }
 
-
+    if(s.id == 202) {
+    // Mapeamento UV para o quadro (ajuste conforme posição/tamanho do quadro)
+    // Supondo que o quadro está em centroQuadro, com largura e altura conhecidas:
+    vec3 quadroCentro = vec3(0.03, -3.0, 20.0); // mesmo que no getDist
+    float quadroLargura = 5.0;
+    float quadroAltura = 5.0;
+    vec2 uv = (p.xy - quadroCentro.xy) / vec2(quadroLargura, quadroAltura) + 0.5;
+    uv.y = 1.0 - uv.y; // inverte o eixo Y
+    s.color = texture(iChannel3, uv).rgb;
+    }
     //phong contrib
     vec3 Is=vec3(0.);
    vec3 Is1=vec3(0.);
@@ -1400,4 +1431,3 @@ col = l;
 C = vec4( col, 1.0 );
 
 }
-
