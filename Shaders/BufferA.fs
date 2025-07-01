@@ -815,11 +815,70 @@ Surface getDist(vec3 p)
     // Adiciona o tapete ao cenário
     d = unionS(Tapete, d);
     
+    // --- QUEIJO COM FATIA E ÁRVORE ---
+    float t = iTime;
+    vec3 deslocamentoQueijo = vec3(5.0, -0.40, 0.0);
+    mat4 mQueijo = rotY(40.0 * t) * trans(deslocamentoQueijo);
+    vec3 pQueijo = opTransf(p, mQueijo);
+
+    // Cilindro principal do queijo
+    float queijoSD = cylinderVerticalDist(pQueijo, vec2(1.7, 0.3));
+
+    // Fatia (corte)
+    float angle = radians(40.0);
+    vec3 n1 = normalize(vec3(sin(angle), 0.0, -cos(angle)));
+    vec3 n2 = normalize(vec3(-sin(angle), 0.0, -cos(angle)));
+    float corte1 = planeDist(pQueijo, n1, 0.0);
+    float corte2 = planeDist(pQueijo, n2, 0.0);
+    float corte3 = -cylinderVerticalDist(pQueijo, vec2(2.0, 0.3));
+    float fatia = max(max(corte1, corte2), corte3);
+
+    // SDF final do queijo com fatia
+    float queijoFinalSD = max(queijoSD, -fatia);
+
+    Surface Queijo;
+    Queijo.sd = queijoFinalSD;
+    Queijo.color = vec3(1.2, 1.0, 0.3);
+    Queijo.Ka = 0.3; Queijo.Kd = 0.5; Queijo.Ks = 0.2;
+    Queijo.id = 2;
+    d = unionS(Queijo, d);
+
+    // --- ÁRVORE NO CENTRO DO QUEIJO ---
+    vec3 centroArvore = deslocamentoQueijo + vec3(-10.0, 0.8, 0.0); // centro do queijo, em cima dele
+
+    // Tronco (cilindro vertical, mais alto)
+    vec3 pTronco = p - centroArvore;
+    float troncoAltura = 1.1;
+    float troncoSD = cylinderVerticalDist(pTronco, vec2(0.08, troncoAltura));
+
+    // Copa principal (esfera maior em cima do tronco)
+    vec3 copaPos = centroArvore + vec3(0.0, troncoAltura, 0.0);
+    float copaSD = length(p - copaPos) - 0.32;
+
+    // Coordenadas UV esféricas para textura
+    vec3 dir = normalize(p - copaPos);
+    float u = 0.5 + atan(dir.z, dir.x) / (2.0 * PI);
+    float v = 0.5 - asin(dir.y) / PI;
+    vec2 uvCopa = vec2(u, v);
+
+    // Junta tronco e copa
+    float arvoreSD = min(troncoSD, copaSD);
+
+    Surface Arvore;
+    Arvore.sd = arvoreSD;
+    // Corrigido: aplica textura na copa usando máscara
+    float copaMask = step(copaSD, troncoSD); // 1.0 se copaSD <= troncoSD
+    Arvore.color = mix(vec3(0.4, 0.2, 0.05), texture(iChannel2, uvCopa).rgb, copaMask);
+    Arvore.Ka = 0.3; Arvore.Kd = 0.6; Arvore.Ks = 0.2;
+    Arvore.id = 60;
+
+    d = unionS(Arvore, d);
+
     
 
-    Surface CSG;
-    CSG = csgObject(p); CSG.id=2;
-    d=unionS(CSG,d);
+    // Surface CSG;
+    // CSG = csgObject(p); CSG.id=2;
+    // d=unionS(CSG,d);
 
     //Esfera esquerda
     // Surface SphereLeft;
@@ -990,6 +1049,7 @@ Surface getDist(vec3 p)
     PratoF2.Ka = 0.3; PratoF2.Kd = 0.6; PratoF2.Ks = 0.4;
     PratoF2.id = 23;
     d = unionS(PratoF2, d);
+
 
     // Surface OctPrism;
     // OctPrism.sd = octogonPrismDist(p-vec3( 3.0,0.8,5.0), 0.7, 0.25); OctPrism.id=4;
