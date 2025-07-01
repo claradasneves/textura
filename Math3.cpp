@@ -215,10 +215,13 @@ int main()
     unsigned int iChannel_0;
     //unsigned int imageTexture0 = loadTexture("../textures/ShaderToyTextures/Abstract3.jpg");
     unsigned int imageTexture0 = loadTexture("../textures/ShaderToyTextures/queijo.jpeg");
+    unsigned int imageTexture1 = loadTexture("../textures/ShaderToyTextures/wood.jpg");
     unsigned int imageTexture2 = loadTexture("../textures/ShaderToyTextures/folha.jpeg");
     unsigned int bandeiraTexture01 = loadTexture("../textures/ShaderToyTextures/logo-azul-usp.jpg");
     unsigned int bandeiraTexture02 = loadTexture("../textures/ShaderToyTextures/brasil.png");
     unsigned int bandeiraTexture03 = loadTexture("../textures/ShaderToyTextures/sao-paulo.png");
+    unsigned int quadroTexture = loadTexture("../textures/ShaderToyTextures/RockTiles.jpg");
+
 
     glGenTextures(1, &iChannel_0);
     glBindTexture(GL_TEXTURE_2D, iChannel_0);
@@ -421,7 +424,9 @@ double * mouse = (double *) malloc(sizeof(double)*4);
         //Utilização de um segundo shader para calcular vizinhança
         BufferAprogram.use();
         BufferAprogram.setSampler("iChannel0",0);
+        BufferAprogram.setSampler("iChannel1",1);
         BufferAprogram.setSampler("iChannel2",2);
+        BufferAprogram.setSampler("iChannel3",3);
         BufferAprogram.setSampler("iChannel4",4);
         BufferAprogram.setSampler("iChannel5",5);
         BufferAprogram.setSampler("iChannel6",6);
@@ -432,8 +437,12 @@ double * mouse = (double *) malloc(sizeof(double)*4);
         glBindVertexArray(VAO);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, imageTexture0);
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, imageTexture1);
         glActiveTexture(GL_TEXTURE2);
         glBindTexture(GL_TEXTURE_2D, imageTexture2);
+        glActiveTexture(GL_TEXTURE3);
+        glBindTexture(GL_TEXTURE_2D, quadroTexture); // quadro
         glActiveTexture(GL_TEXTURE4);
         glBindTexture(GL_TEXTURE_2D, bandeiraTexture01); // USP
         glActiveTexture(GL_TEXTURE5);
@@ -534,10 +543,10 @@ double * mouse = (double *) malloc(sizeof(double)*4);
 
         glBindVertexArray(VAO);
         Imageprogram.setVec2("iResolution",resolution) ;
-       Imageprogram.setSampler("iChannel0",0);
-        //Imageprogram.setSampler("iChannel1",1);
-       // Imageprogram.setSampler("iChannel2",2);
-        //Imageprogram.setSampler("iChannel3",3);
+        Imageprogram.setSampler("iChannel0",0);
+        Imageprogram.setSampler("iChannel1",1);
+        Imageprogram.setSampler("iChannel2",2);
+        Imageprogram.setSampler("iChannel3",3);
         Imageprogram.setFloat("iTime",currentTime);
         Imageprogram.setVec4("iMouse", mouse);
         glActiveTexture(GL_TEXTURE0);
