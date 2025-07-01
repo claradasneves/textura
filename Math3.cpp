@@ -215,6 +215,7 @@ int main()
     unsigned int iChannel_0;
     //unsigned int imageTexture0 = loadTexture("../textures/ShaderToyTextures/Abstract3.jpg");
     unsigned int imageTexture0 = loadTexture("../textures/ShaderToyTextures/queijo.jpeg");
+    unsigned int imageTexture2 = loadTexture("../textures/ShaderToyTextures/folha.jpeg");
     unsigned int bandeiraTexture01 = loadTexture("../textures/ShaderToyTextures/logo-azul-usp.jpg");
     unsigned int bandeiraTexture02 = loadTexture("../textures/ShaderToyTextures/brasil.png");
     unsigned int bandeiraTexture03 = loadTexture("../textures/ShaderToyTextures/sao-paulo.png");
@@ -420,6 +421,7 @@ double * mouse = (double *) malloc(sizeof(double)*4);
         //Utilização de um segundo shader para calcular vizinhança
         BufferAprogram.use();
         BufferAprogram.setSampler("iChannel0",0);
+        BufferAprogram.setSampler("iChannel2",2);
         BufferAprogram.setSampler("iChannel4",4);
         BufferAprogram.setSampler("iChannel5",5);
         BufferAprogram.setSampler("iChannel6",6);
@@ -430,6 +432,8 @@ double * mouse = (double *) malloc(sizeof(double)*4);
         glBindVertexArray(VAO);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, imageTexture0);
+        glActiveTexture(GL_TEXTURE2);
+        glBindTexture(GL_TEXTURE_2D, imageTexture2);
         glActiveTexture(GL_TEXTURE4);
         glBindTexture(GL_TEXTURE_2D, bandeiraTexture01); // USP
         glActiveTexture(GL_TEXTURE5);

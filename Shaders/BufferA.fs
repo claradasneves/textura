@@ -643,14 +643,16 @@ Surface csgObject(vec3 p)
     vec3 pMundo = p;
 
     // Rotação e translação do queijo
-    mat4 m = trans(vec3(0.0, -0.40, 0.0)) * rotY(40.0 * t);
+    // Deslocamento de 5 pixels para a esquerda
+    vec3 deslocamentoQueijo = vec3(5.0, -0.40, 0.0);
+    mat4 m = rotY(40.0 * t) * trans(deslocamentoQueijo);
     p = opTransf(p, m); // esse "p" será usado só para o queijo
 
     // =========================
     // QUEIJO COM CORTES (igual estava)
     // =========================
     Surface queijo;
-    queijo.sd = cylinderVerticalDist(p, vec2(2.0, 0.3));
+    queijo.sd = cylinderVerticalDist(p, vec2(1.7, 0.3));
     queijo.color = vec3(1.2, 1.0, 0.3);
     queijo.Ka = 0.3; queijo.Kd = 0.5; queijo.Ks = 0.2;
 
@@ -682,12 +684,20 @@ Surface csgObject(vec3 p)
     vec3 copaPos = centroArvore + vec3(0.0, troncoAltura, 0.0);
     float copaSD = length(p - copaPos) - 0.32;
 
+    // Coordenadas UV esféricas para textura
+    vec3 dir = normalize(p - copaPos);
+    float u = 0.5 + atan(dir.z, dir.x) / (2.0 * PI);
+    float v = 0.5 - asin(dir.y) / PI;
+    vec2 uvCopa = vec2(u, v);
+
     // Junta tronco e copa
     float arvoreSD = min(troncoSD, copaSD);
 
     Surface Arvore;
     Arvore.sd = arvoreSD;
-    Arvore.color = (arvoreSD == troncoSD) ? vec3(0.4, 0.2, 0.05) : vec3(0.1, 0.6, 0.1); // marrom ou verde
+    // Corrigido: aplica textura na copa usando máscara
+    float copaMask = step(copaSD, troncoSD); // 1.0 se copaSD <= troncoSD
+    Arvore.color = mix(vec3(0.4, 0.2, 0.05), texture(iChannel2, uvCopa).rgb, copaMask);
     Arvore.Ka = 0.3; Arvore.Kd = 0.6; Arvore.Ks = 0.2;
     Arvore.id = 60;
 
@@ -823,8 +833,8 @@ Surface getDist(vec3 p)
     // Parâmetros da rotação
     float angPanela = iTime * 0.7; // velocidade da rotação
 
-    // Centro da panela
-    vec3 centroPanela = vec3(-3.0, -1.75, 4.0);
+    // Centro da panela (deslocado 2 unidades para a direita)
+    vec3 centroPanela = vec3(-3.0, -1.75, 4.0) - vec3(2.0, 0.0, -2.0);
 
     // Aplica rotação no espaço da panela (em torno do centro)
     vec3 pPanela = p - centroPanela;
@@ -832,15 +842,15 @@ Surface getDist(vec3 p)
     pPanela += centroPanela;
 
     // Corpo
-    vec3 pCorpo = pPanela - vec3(-3.0, 0.8, 4.0);
+    vec3 pCorpo = pPanela - (vec3(-3.0, 0.8, 4.0) - vec3(2.0, 0.0, -2.0));
     float corpoSD = max(length(pCorpo.xz) - 1.0, abs(pCorpo.y) - 0.25);
 
     // Alça esquerda
-    vec3 pHandleL = pPanela - vec3(-2.0, 0.9, 4.0);
+    vec3 pHandleL = pPanela - (vec3(-2.0, 0.9, 4.0) - vec3(2.0, 0.0, -2.0));
     float alcaLSD = cylinderDist(pHandleL, vec3(0.0, 0.0, -0.3), vec3(0.0, 0.0, 0.3), 0.15);
 
     // Alça direita
-    vec3 pHandleR = pPanela - vec3(-4.0, 0.9, 4.0);
+    vec3 pHandleR = pPanela - (vec3(-4.0, 0.9, 4.0) - vec3(2.0, 0.0, -2.0));
     float alcaRSD = cylinderDist(pHandleR, vec3(0.0, 0.0, -0.3), vec3(0.0, 0.0, 0.3), 0.15);
 
     // Junta corpo e as duas alças
@@ -850,7 +860,7 @@ Surface getDist(vec3 p)
     // vec3 tampaPos = vec3(-3.0, 1.05, 4.0);
     // --- TAMPA ANIMADA (sobe e desce) ---
     float animTampa = 0.09 * sin(iTime * 2.0); // amplitude e velocidade
-    vec3 tampaPos = vec3(-3.0, 1.05 + animTampa, 4.0);
+    vec3 tampaPos = (vec3(-3.0, 1.05 + animTampa, 4.0) - vec3(2.0, 0.0, -2.0));
     float tampaSD = cylinderVerticalDist(pPanela - tampaPos, vec2(1.0, 0.05));
 
     // --- SUPORTE DA TAMPA ---
@@ -870,8 +880,48 @@ Surface getDist(vec3 p)
 }
     d = unionS(panela, d);
 
+    // --- PRATOS GIRANDO EM TORNO DA PANELA ---
+    float yPrato = 0.8; // mesma altura do centro da panela
+    vec3 centroPanelaPratos = vec3(-3.0, yPrato, 4.0) - vec3(2.0, 0.0, -2.0); // centro da panela deslocado
+
+    float raioPrato = 2.5; // distância dos pratos ao centro da panela
+    float angulo = iTime * 0.7; // velocidade da rotação
+
+    // Prato 1
+    vec3 prato1Pos = centroPanelaPratos + vec3(
+        raioPrato * cos(angulo),
+        0.0,
+        raioPrato * sin(angulo)
+    );
+
+    // Prato 2 (oposto ao prato 1)
+    vec3 prato2Pos = centroPanelaPratos + vec3(
+        raioPrato * cos(angulo + PI),
+        0.0,
+        raioPrato * sin(angulo + PI)
+    );
+
+    float prato1SD = cylinderVerticalDist(p - prato1Pos, vec2(0.8, 0.03));
+    Surface Prato1;
+    Prato1.sd = prato1SD;
+    Prato1.color = vec3(0.95, 0.95, 0.85);
+    Prato1.Ka = 0.3; Prato1.Kd = 0.6; Prato1.Ks = 0.4;
+    Prato1.id = 20;
+    d = unionS(Prato1, d);
+
+    float prato2SD = cylinderVerticalDist(p - prato2Pos, vec2(0.8, 0.03));
+    Surface Prato2;
+    Prato2.sd = prato2SD;
+    Prato2.color = vec3(0.95, 0.95, 0.85);
+    Prato2.Ka = 0.3; Prato2.Kd = 0.6; Prato2.Ks = 0.4;
+    Prato2.id = 21;
+    d = unionS(Prato2, d);
+
+
     // --- FRIGIDEIRA AO LADO DA PANELA ---
-    vec3 centroFrigideira = vec3(-1.0, 1.5, 4.0); // posição ao lado da panela
+    // Deslocamento de 4 pixels para a direita
+    vec3 deslocamentoFrigideira = vec3(5.0, 0.0, 1.0);
+    vec3 centroFrigideira = vec3(-1.0, 1.5, 4.0) + deslocamentoFrigideira; // posição ao lado da panela
 
     // Corpo da frigideira (cilindro baixo)
     vec3 pFrigideira = p - centroFrigideira;
@@ -905,45 +955,6 @@ Surface getDist(vec3 p)
     Frigideira.Ka = 0.3; Frigideira.Kd = 0.6; Frigideira.Ks = 0.7;
     Frigideira.id = 11;
     d = unionS(Frigideira, d);
-
-
-
-    // --- PRATOS GIRANDO EM TORNO DA PANELA ---
-    float yPrato = 0.8; // mesma altura do centro da panela
-    vec3 centroPanela = vec3(-3.0, yPrato, 4.0); // centro da panela
-
-    float raioPrato = 2.5; // distância dos pratos ao centro da panela
-    float angulo = iTime * 0.7; // velocidade da rotação
-
-    // Prato 1
-    vec3 prato1Pos = centroPanela + vec3(
-        raioPrato * cos(angulo),
-        0.0,
-        raioPrato * sin(angulo)
-    );
-
-    // Prato 2 (oposto ao prato 1)
-    vec3 prato2Pos = centroPanela + vec3(
-        raioPrato * cos(angulo + PI),
-        0.0,
-        raioPrato * sin(angulo + PI)
-    );
-
-    float prato1SD = cylinderVerticalDist(p - prato1Pos, vec2(0.8, 0.03));
-    Surface Prato1;
-    Prato1.sd = prato1SD;
-    Prato1.color = vec3(0.95, 0.95, 0.85);
-    Prato1.Ka = 0.3; Prato1.Kd = 0.6; Prato1.Ks = 0.4;
-    Prato1.id = 20;
-    d = unionS(Prato1, d);
-
-    float prato2SD = cylinderVerticalDist(p - prato2Pos, vec2(0.8, 0.03));
-    Surface Prato2;
-    Prato2.sd = prato2SD;
-    Prato2.color = vec3(0.95, 0.95, 0.85);
-    Prato2.Ka = 0.3; Prato2.Kd = 0.6; Prato2.Ks = 0.4;
-    Prato2.id = 21;
-    d = unionS(Prato2, d);
 
     // Surface OctPrism;
     // OctPrism.sd = octogonPrismDist(p-vec3( 3.0,0.8,5.0), 0.7, 0.25); OctPrism.id=4;
@@ -1042,11 +1053,11 @@ Surface getDist(vec3 p)
     float alturaMastro = 5.5; // triplo da altura original
 
     for (int i = 0; i < 3; i++) {
-        float dx = float(i - 1) * 4; // espaçamento dos mastros no eixo X
+        float dx = float(i - 1) * 6; // espaçamento dos mastros no eixo X
         vec3 mastroPos = baseMastro + vec3(dx, 0.0, 0.0); // alinhados no eixo X
 
         // Mastro: cilindro vertical, bem mais alto
-        float mastroSD = cylinderVerticalDist(p - mastroPos, vec2(0.1, alturaMastro));
+        float mastroSD = cylinderVerticalDist(p - mastroPos, vec2(0.13, alturaMastro));
         Surface Mastro;
         Mastro.sd = mastroSD;
         Mastro.color = vec3(0.7, 0.7, 0.7);
@@ -1055,8 +1066,8 @@ Surface getDist(vec3 p)
         d = unionS(Mastro, d);
 
         // Bandeira: faixa animada com vento, presa na ponta do mastro
-        float largura = 1.0;
-        float altura = 0.5;
+        float largura = 2.0; // dobrado
+        float altura = 1.0;  // dobrado
         // Posição da ponta presa ao mastro (canto esquerdo da bandeira)
         vec3 origem = mastroPos + vec3(-0.09, alturaMastro, -0.6);
         vec3 pBandeira = p - origem;
@@ -1082,21 +1093,21 @@ Surface getDist(vec3 p)
             float u = (z + largura) / (2.0 * largura);
             float v = 1.0 - (y + altura) / (2.0 * altura);
             vec2 uv = vec2(u, v);
-            Bandeira.color = texture(iChannel4, uv).rgb * 0.7;
+            Bandeira.color = texture(iChannel4, uv).rgb * 0.8;
         }
         if (i == 1) {
             float u = (z + largura) / (2.0 * largura);
             float v = 1.0 - (y + altura) / (2.0 * altura);
             vec2 uv = vec2(u, v);
-            Bandeira.color = texture(iChannel5, uv).rgb * 0.7;
+            Bandeira.color = texture(iChannel5, uv).rgb * 0.8;
         }
         if (i == 2) {
             float u = (z + largura) / (2.0 * largura);
             float v = 1.0 - (y + altura) / (2.0 * altura);
             vec2 uv = vec2(u, v);
-            Bandeira.color = texture(iChannel6, uv).rgb * 0.7;
+            Bandeira.color = texture(iChannel6, uv).rgb * 0.8;
         }
-        Bandeira.Ka = 0.3; Bandeira.Kd = 0.7; Bandeira.Ks = 0.5;
+        Bandeira.Ka = 0.3; Bandeira.Kd = 0.7; Bandeira.Ks = 0.4;
         Bandeira.id = 40 + i;
         d = unionS(Bandeira, d);
     }
@@ -1290,45 +1301,42 @@ vec3 getLight(vec3 p,Surface s,vec3 Cam)
     float l1=dot(N,lightDir1);
     l1= clamp(l1,0.0,1.0);
 
-    if(s.id == 1) 
-    {
-    // Reaplica textura no plano para garantir iluminação correta
-    vec2 uv = p.xz * 0.25;
-    uv = fract(uv);
-    s.color = texture(iChannel1, uv).rgb;
+    if(s.id == 60) {
+        // Copa da árvore: não aplicar textura de queijo, usar apenas s.color
     }
-
-    if(s.id==3)
+    else if(s.id == 1) 
     {
-            float theta = acos(N.z);
-            float phi = PI+ atan(N.y/N.x);
-            float x = theta/PI;
-            float y =phi/(2.0*PI);
-            s.color = mix(s.color,texture(iChannel0,vec2(x,y)).xyz,0.5);
+        // Reaplica textura no plano para garantir iluminação correta
+        vec2 uv = p.xz * 0.25;
+        uv = fract(uv);
+        s.color = texture(iChannel1, uv).rgb;
     }
-
-    if(s.id==5)
+    else if(s.id==3)
     {
-            float theta = acos(N.z);
-            float phi = PI+ atan(N.y/N.x);
-            float x = theta/PI;
-            float y =phi/(2.0*PI);
-            float n =perlin_noise(vec2(x,y)*iResolution.xy);
-            s.color =vec3(abs(cos(n*10.0)));
-
+        float theta = acos(N.z);
+        float phi = PI+ atan(N.y/N.x);
+        float x = theta/PI;
+        float y =phi/(2.0*PI);
+        s.color = mix(s.color,texture(iChannel0,vec2(x,y)).xyz,0.5);
     }
-
-    if(s.id == 6)
+    else if(s.id==5)
     {
-    // Mapeamento procedural para efeito cortado
-    s.color=boxmap(iChannel0,p,N,1.0);
-    float grain = sin(30.0 * p.x) * cos(30.0 * p.z);
-    grain *= 0.3 + 0.7 * perlin_noise(p.xz * 10.0);
-    s.color = mix(s.color, vec3(1.0, 0.9, 0.5), grain);  // parte interna mais clara
+        float theta = acos(N.z);
+        float phi = PI+ atan(N.y/N.x);
+        float x = theta/PI;
+        float y =phi/(2.0*PI);
+        float n =perlin_noise(vec2(x,y)*iResolution.xy);
+        s.color =vec3(abs(cos(n*10.0)));
     }
-
-
-    if(s.id==2)
+    else if(s.id == 6)
+    {
+        // Mapeamento procedural para efeito cortado
+        s.color=boxmap(iChannel0,p,N,1.0);
+        float grain = sin(30.0 * p.x) * cos(30.0 * p.z);
+        grain *= 0.3 + 0.7 * perlin_noise(p.xz * 10.0);
+        s.color = mix(s.color, vec3(1.0, 0.9, 0.5), grain);  // parte interna mais clara
+    }
+    else if(s.id==2)
     {
         s.color=boxmap(iChannel0,p,N,1.0);
     }
