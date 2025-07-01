@@ -215,6 +215,9 @@ int main()
     unsigned int iChannel_0;
     //unsigned int imageTexture0 = loadTexture("../textures/ShaderToyTextures/Abstract3.jpg");
     unsigned int imageTexture0 = loadTexture("../textures/ShaderToyTextures/queijo.jpeg");
+    unsigned int bandeiraTexture01 = loadTexture("../textures/ShaderToyTextures/logo-azul-usp.jpg");
+    unsigned int bandeiraTexture02 = loadTexture("../textures/ShaderToyTextures/brasil.png");
+    unsigned int bandeiraTexture03 = loadTexture("../textures/ShaderToyTextures/sao-paulo.png");
 
     glGenTextures(1, &iChannel_0);
     glBindTexture(GL_TEXTURE_2D, iChannel_0);
@@ -415,9 +418,11 @@ double * mouse = (double *) malloc(sizeof(double)*4);
           glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
           //glClear( GL_DEPTH_BUFFER_BIT);
         //Utilização de um segundo shader para calcular vizinhança
-         BufferAprogram.use();
+        BufferAprogram.use();
         BufferAprogram.setSampler("iChannel0",0);
-         //BufferAprogram.setSampler("iChannel1",1);
+        BufferAprogram.setSampler("iChannel4",4);
+        BufferAprogram.setSampler("iChannel5",5);
+        BufferAprogram.setSampler("iChannel6",6);
         BufferAprogram.setVec2("iResolution",resolution) ;
         BufferAprogram.setVec4("iMouse", mouse);
         BufferAprogram.setFloat("iTime",currentTime);
@@ -425,6 +430,12 @@ double * mouse = (double *) malloc(sizeof(double)*4);
         glBindVertexArray(VAO);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, imageTexture0);
+        glActiveTexture(GL_TEXTURE4);
+        glBindTexture(GL_TEXTURE_2D, bandeiraTexture01); // USP
+        glActiveTexture(GL_TEXTURE5);
+        glBindTexture(GL_TEXTURE_2D, bandeiraTexture02); // Brasil
+        glActiveTexture(GL_TEXTURE6);
+        glBindTexture(GL_TEXTURE_2D, bandeiraTexture03); // São Paulo
        //glActiveTexture(GL_TEXTURE1);
         //glBindTexture(GL_TEXTURE_2D, iChannel_3);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT,0);
@@ -636,7 +647,11 @@ unsigned int loadTexture(char const * path)
     glGenTextures(1, &textureID);
 
     int width, height, nrComponents;
-    unsigned char *data = stbi_load(path, &width, &height, &nrComponents, 0);
+    std::cout << "Trying to load: " << path << std::endl;
+    unsigned char *data = stbi_load(path, &width, &height, &nrComponents, 3);
+    if (!data) {
+        std::cout << "stbi_failure_reason: " << stbi_failure_reason() << std::endl;
+    }
     if (data)
     {
         GLenum format;

@@ -5,12 +5,13 @@ uniform sampler2D iChannel0;
 uniform sampler2D iChannel1;
 uniform sampler2D iChannel2;
 uniform sampler2D iChannel3;
+uniform sampler2D iChannel4; // Bandeira USP
+uniform sampler2D iChannel5; // Bandeira Brasil
+uniform sampler2D iChannel6; // Bandeira SP
 uniform vec2 iResolution;
 uniform vec4 iMouse;
 uniform float iTime;
 uniform int iFrame;
-
-
 
 #define MAX_STEPS 100
 #define MAX_DIST 200.
@@ -21,9 +22,17 @@ float dot2( in vec2 v ) { return dot(v,v); }
 float dot2( in vec3 v ) { return dot(v,v); }
 float ndot( in vec2 a, in vec2 b ) { return a.x*b.x - a.y*b.y; }
 
+// vec3 Sky( vec3 ray )
+// {
+//         return mix( vec3(.8), vec3(0), exp2(-(1.0/max(ray.y,.01))*vec3(.4,.6,1.0)) );
+// }
+
 vec3 Sky( vec3 ray )
 {
-        return mix( vec3(.8), vec3(0), exp2(-(1.0/max(ray.y,.01))*vec3(.4,.6,1.0)) );
+    // Gradiente: mais claro para cima, mais escuro para baixo
+    float t = clamp(ray.y * 0.5 + 0.5, 0.0, 1.0);
+    // Branco amarelado no teto, cinza claro no chão
+    return mix(vec3(0.7, 0.7, 0.75), vec3(1.0, 0.98, 0.92), t);
 }
 
 // noise
@@ -171,7 +180,7 @@ float heartDist(vec3 p, vec3 c, float r)
 
 float planeDist(vec3 p, vec3 Normal,float D)
 {
-    return p.x*Normal.x + p.y*Normal.y + p.z*Normal.z -D - .1 * sin (4. * p.x) * cos (4. * p.z);
+    return p.x*Normal.x + p.y*Normal.y + p.z*Normal.z -D;// - .1 * sin (4. * p.x) * cos (4. * p.z);
 }
 
 
@@ -489,6 +498,8 @@ Surface subtractionS(Surface s1,Surface s2)
         Ret.Kd=s2.Kd;
         Ret.Ks=s2.Ks;
         Ret.sd=-s2.sd;
+        Ret.id = s2.id;  // manter id do corte
+
         return Ret;
     }
     else
@@ -497,71 +508,685 @@ Surface subtractionS(Surface s1,Surface s2)
 
 // Surface csgObject(vec3 p)
 // {
-//     float t =iTime;
-//     mat4 m = rotX (30. * t) * rotY (40. * t) * rotZ (50. * t)*trans(vec3( -1.0,-0.6, -3.0)) ;
-//     p = opTransf(p,m);
-//     Surface R;
-//     R.sd = boxRoundDist((p), vec3(0.5),0.1);
-//     R.color = vec3(0.1,0.2,0.7); R.Ka=0.2; R.Kd=0.4;R.Ks=0.4;
-//     Surface S;
-//     S.sd = sphereDist(p,0.8);
-//     S.color = vec3(0.1,0.2,0.7); S.Ka=0.2; S.Kd=0.4;S.Ks=0.4;
-//     R = subtractionS(R,S);
-//     return R;
+//     float t = iTime;
+
+//     // Aplica rotação e translação no queijo
+//     mat4 m = trans(vec3(0.0, -0.40, 0.0)) * rotY(40.0 * t);
+//     p = opTransf(p, m);
+
+//     // -----------------------------------
+//     // QUEIJO: cilindro principal
+//     Surface queijo;
+//     queijo.sd = cylinderVerticalDist(p, vec2(2.0, 0.3)); // raio=2, altura=0.3
+//     queijo.color = vec3(0.0, 0.0, 1.0);
+//     queijo.Ka = 0.3; queijo.Kd = 0.5; queijo.Ks = 0.2;
+
+//     // -----------------------------------
+//     // FATIA radial (como pizza)
+
+//     // Ângulo da abertura da fatia
+//     float angle = radians(120.0); // fatia de ±10º (total de 20)
+
+//     // Primeiro plano lateral (ângulo positivo)
+//     vec3 n1 = normalize(vec3(sin(angle / 2.0), 0.0, -cos(angle / 2.0)));
+//     float d1 = 0.0;
+//     float corte1 = planeDist(p, n1, d1);
+
+//     // Segundo plano lateral (ângulo negativo)
+//     vec3 n2 = normalize(vec3(-sin(angle / 2.0), 0.0, -cos(angle / 2.0)));
+//     float d2 = 0.0;
+//     float corte2 = planeDist(p, n2, d2);
+
+//     // Corte interno: limita a fatia até o centro
+//     float corte3 = -cylinderVerticalDist(p, vec2(2.0, 0.3)); // pega só dentro do queijo
+
+//     // Interseção dos planos define o volume da fatia
+//     float fatia = max(max(corte1, corte2), corte3);
+
+//     Surface corte;
+//     corte.sd = fatia;
+//     corte.color = vec3(0.0, 0.0, 0.0); 
+//     corte.Ka = 0.0; corte.Kd = 0.0; corte.Ks = 0.0;
+
+//     // Subtrai a fatia do queijo
+//     Surface resultado = subtractionS(queijo, corte);
+
+//     return resultado;
 // }
 
-//TENTATIVA QUEIJO
+// Surface csgObject(vec3 p)
+// {
+//     float t = iTime;
+
+//     // Aplica rotação e translação
+//     mat4 m = trans(vec3(0.0, -0.40, 0.0)) * rotY(40.0 * t);
+//     p = opTransf(p, m);
+
+//     // Define o cilindro de queijo
+//     Surface queijo;
+//     queijo.sd = cylinderVerticalDist(p, vec2(2.0, 0.3)); // raio, altura
+//     queijo.color = vec3(1.2, 1.0, 0.3);
+//     queijo.Ka = 0.3; queijo.Kd = 0.5; queijo.Ks = 0.2;
+
+//     // Define o prisma triangular a ser removido (a fatia)
+//     vec3 fatiaPos = p;
+
+//     // Gira o espaço da fatia para apontar para o centro (em torno de Y)
+//     float angulo = radians(120.0); // ângulo da fatia, ajuste para abrir mais ou menos
+//     mat2 rot = mat2(cos(angulo), -sin(angulo), sin(angulo), cos(angulo));
+//     fatiaPos.xz = rot * fatiaPos.xz;
+
+//     // Desloca a fatia radialmente
+//     fatiaPos -= vec3(2.0, 0.0, 0.0); // deslocamento radial
+
+//     float fatia = triPrismDist(fatiaPos, vec2(4.0, 0.3)); // base grande, altura da cena
+
+//     Surface corte;
+//     corte.sd = fatia;
+//     corte.color = vec3(0.0);
+//     corte.Ka = 0.5; corte.Kd = 0.5; corte.Ks = 0.5;
+
+//     // Subtrai a fatia do cilindro
+//     Surface resultado = subtractionS(queijo, corte);
+
+//     return resultado;
+// }
+
+// Surface csgObject(vec3 p)
+// {
+//     float t = iTime;
+
+//     // Aplica rotação e translação no queijo
+//     mat4 m = trans(vec3(0.0, -0.40, 0.0)) * rotY(40.0 * t);
+//     p = opTransf(p, m);
+
+//     // Cilindro principal do queijo
+//     Surface queijo;
+//     queijo.sd = cylinderVerticalDist(p, vec2(2.0, 0.3)); // raio=2, altura=0.3
+//     queijo.color = vec3(1.2, 1.0, 0.3);
+//     queijo.Ka = 0.3; queijo.Kd = 0.5; queijo.Ks = 0.2;
+
+//     // Ângulo da fatia (setor)
+//     float angle = radians(120.0);
+
+//     // Planos laterais da fatia (definem setor angular)
+//     vec3 n1 = normalize(vec3(sin(angle / 2.0), 0.0, -cos(angle / 2.0)));
+//     vec3 n2 = normalize(vec3(-sin(angle / 2.0), 0.0, -cos(angle / 2.0)));
+//     float corte1 = planeDist(p, n1, 0.0);
+//     float corte2 = planeDist(p, n2, 0.0);
+
+//     // Limita a fatia até o centro do cilindro (negando cilindro)
+//     float corte3 = -cylinderVerticalDist(p, vec2(2.0, 0.3));
+
+//     // Interseção dos planos forma a fatia
+//     float fatia = max(max(corte1, corte2), corte3);
+
+
+//     Surface corte;
+//     corte.sd = fatia;
+//     // Sem cor nem iluminação para corte (espaço vazio)
+//     corte.color = vec3(0.0);
+    
+//     corte.Ka = 0.0; corte.Kd = 0.0; corte.Ks = 0.0;
+//     // Subtração da fatia do queijo
+//     Surface resultado = subtractionS(queijo, corte);
+
+//     return resultado;
+// }
+
+//CODIGO QUEIJO FATIA CLARA
 Surface csgObject(vec3 p)
 {
     float t = iTime;
 
-    // Gira em torno do eixo Y e sobe um pouco
-    mat4 m = rotX(40.0 * t) * trans(vec3(0.0, -0.35, 0.0));
-    p = opTransf(p, m);
+    // Armazena ponto original (mundo) antes de transformar
+    vec3 pMundo = p;
 
-    // Cilindro de queijo
+    // Rotação e translação do queijo
+    mat4 m = trans(vec3(0.0, -0.40, 0.0)) * rotY(40.0 * t);
+    p = opTransf(p, m); // esse "p" será usado só para o queijo
+
+    // =========================
+    // QUEIJO COM CORTES (igual estava)
+    // =========================
     Surface queijo;
-    queijo.sd = cylinderVerticalDist(p, vec2(1.0, 0.2)); // raio, altura
-    queijo.color = vec3(1.2, 1.0, 0.3); // amarelo forte
+    queijo.sd = cylinderVerticalDist(p, vec2(2.0, 0.3));
+    queijo.color = vec3(1.2, 1.0, 0.3);
     queijo.Ka = 0.3; queijo.Kd = 0.5; queijo.Ks = 0.2;
 
-    return queijo;
+    float angle = radians(40.0);
+    vec3 n1 = normalize(vec3(sin(angle), 0.0, -cos(angle)));
+    vec3 n2 = normalize(vec3(-sin(angle), 0.0, -cos(angle)));
+    float corte1 = planeDist(p, n1, 0.0);
+    float corte2 = planeDist(p, n2, 0.0);
+    float corte3 = -cylinderVerticalDist(p, vec2(2.0, 0.3));
+    float fatia = max(max(corte1, corte2), corte3);
+
+    Surface corte;
+    corte.sd = fatia;
+    corte.color = vec3(0.0);
+    corte.Ka = 0.5; corte.Kd = 0.7; corte.Ks = 0.0;
+    corte.id = 6;
+
+    Surface resultado = subtractionS(queijo, corte);
+
+    // --- ÁRVORE NO CENTRO DO QUEIJO (alta e com mais ramos) ---
+    vec3 centroArvore = vec3(0.0, 0.3, 0.0); // centro do queijo, em cima dele
+
+    // Tronco (cilindro vertical, mais alto)
+    vec3 pTronco = p - centroArvore;
+    float troncoAltura = 1.1;
+    float troncoSD = cylinderVerticalDist(pTronco, vec2(0.08, troncoAltura));
+
+    // Copa principal (esfera maior em cima do tronco)
+    vec3 copaPos = centroArvore + vec3(0.0, troncoAltura, 0.0);
+    float copaSD = length(p - copaPos) - 0.32;
+
+    // Junta tronco e copa
+    float arvoreSD = min(troncoSD, copaSD);
+
+    Surface Arvore;
+    Arvore.sd = arvoreSD;
+    Arvore.color = (arvoreSD == troncoSD) ? vec3(0.4, 0.2, 0.05) : vec3(0.1, 0.6, 0.1); // marrom ou verde
+    Arvore.Ka = 0.3; Arvore.Kd = 0.6; Arvore.Ks = 0.2;
+    Arvore.id = 60;
+
+    // Adiciona a árvore ao queijo
+    resultado = unionS(resultado, Arvore);
+    return resultado;
 }
+
+// //CODIGO QUEIJO FATIA RETANGULAR
+// Surface csgObject(vec3 p)
+// {
+//     float t = iTime;
+
+//     // Aplica rotação e translação no queijo
+//     mat4 m = trans(vec3(0.0, -0.40, 0.0)) * rotY(40.0 * t);
+//     p = opTransf(p, m);
+
+//     // Cilindro principal do queijo
+//     Surface queijo;
+//     queijo.sd = cylinderVerticalDist(p, vec2(2.0, 0.3)); // raio=2, altura=0.3
+//     queijo.color = vec3(1.2, 1.0, 0.3);
+//     queijo.Ka = 0.3; queijo.Kd = 0.5; queijo.Ks = 0.2;
+
+//     // --- FATIA TRIANGULAR ---
+//     // Gira o espaço da fatia para alinhar com o centro do queijo
+//     float angFatia = radians(80.0); // ângulo da fatia (ajuste para mais/menos abertura)
+//     mat2 rot = mat2(cos(angFatia), -sin(angFatia), sin(angFatia), cos(angFatia));
+//     vec3 pFatia = p;
+//     pFatia.xz = rot * pFatia.xz;
+//     // Desloca a fatia para a borda do queijo
+//     pFatia -= vec3(2.0, 0.0, 0.0);
+
+//     // Prisma triangular: base grande, altura igual ao queijo
+//     float fatia = triPrismDist(pFatia, vec2(4.0, 0.3)); // base, altura
+
+//     Surface corte;
+//     corte.sd = fatia;
+//     corte.color = vec3(1.0, 0.9, 0.5); // cor da parte interna (opcional)
+//     corte.Ka = 0.3; corte.Kd = 0.5; corte.Ks = 0.2;
+//     corte.id = 6;
+
+//     // Subtrai a fatia do queijo
+//     Surface resultado = subtractionS(queijo, corte);
+
+//     return resultado;
+// }
+// //TENTATIVA QUEIJO
+// Surface csgObject(vec3 p)
+// {
+//     float t = iTime;
+
+//     // Gira em torno do eixo Y e sobe um pouco
+//     mat4 m = rotY(40.0 * t) * trans(vec3(0.0, -0.40, 0.0));
+//     p = opTransf(p, m);
+
+//     // Cilindro de queijo
+//     Surface queijo;
+//     queijo.sd = cylinderVerticalDist(p, vec2(2.0, 0.3)); // raio, altura
+//     queijo.color = vec3(1.2, 1.0, 0.3); // amarelo forte
+//     queijo.Ka = 0.3; queijo.Kd = 0.5; queijo.Ks = 0.2;
+
+//     return queijo;
+// }
 
 
 
 Surface getDist(vec3 p)
 {
-    float ds = heartDist(p,vec3(0.0,1.0,6.0),1.0);
-    Surface Heart;
-    Heart.sd = ds; Heart.id=0;
-    Heart.color = vec3 (0.9,0.1,0.05); Heart.Ka=0.2; Heart.Kd=0.3;Heart.Ks=0.5;
-    float dp = planeDist(p,vec3 (0.0,1.0,0.0),0.0);
+    // float ds = heartDist(p,vec3(0.0,1.0,6.0),1.0);
+    // Surface Heart;
+    // Heart.sd = ds; Heart.id=0;
+    // Heart.color = vec3 (0.9,0.1,0.05); Heart.Ka=0.2; Heart.Kd=0.3;Heart.Ks=0.5;
+    
+    //Chão
+    float dp = planeDist(p, vec3(0.0, 1.5, 0.0), 0.0);
     Surface Plane;
-    Plane.sd=dp;Plane.id=1;
-    Plane.color=vec3(0.75); Plane.Ka=0.2; Plane.Kd=0.4;Plane.Ks=0.4;
-    Surface d= unionS(Heart,Plane);
+    Plane.sd = dp;
+    Plane.id = 1;
+
+    // TEXTURA wood.jpg no chão
+    vec2 uv = p.xz * 0.25;  // Ajuste escala da textura
+    uv = fract(uv);         // Repete textura em padrão infinito
+    Plane.color = texture(iChannel1, uv).rgb;
+
+    Plane.Ka = 0.2; Plane.Kd = 0.4; Plane.Ks = 0.4;
+
+    // float dp = planeDist(p,vec3 (0.0,1.0,0.0),0.0);
+    // Surface Plane;
+    // Plane.sd=dp;Plane.id=1;
+    // Plane.color=vec3(0.75); Plane.Ka=0.2; Plane.Kd=0.4;Plane.Ks=0.4;
+    // Surface d= unionS(Heart,Plane);
+    Surface d = Plane;
+    // --- TAPETE VERMELHO CENTRAL ---
+    // Posição central do tapete (ajuste Z para o centro do museu)
+    vec3 centroTapete = vec3(0.0, -1.55, 0.0); // y=0.01 para ficar logo acima do chão
+
+    // Elipse: raio maior em X, menor em Z
+    vec2 raioTapete = vec2(5.0, 2.0); // ajuste o tamanho conforme desejar
+
+    // SDF de elipse no plano XZ
+    vec2 pTapete = (p - centroTapete).xy / raioTapete;
+    float tapeteSD = length(pTapete) - 1.0;
+
+    // Efeito de profundidade: gradiente radial
+    float grad = clamp(1.0 - length(pTapete), 0.0, 1.0);
+    vec3 corTapete = mix(vec3(0.3, 0.0, 0.0), vec3(1.0, 0.1, 0.1), pow(grad, 1.5));
+
+    // Superfície do tapete
+    Surface Tapete;
+    Tapete.sd = tapeteSD;
+    Tapete.color = corTapete;
+    Tapete.Ka = 0.5; Tapete.Kd = 0.7; Tapete.Ks = 0.1;
+    Tapete.id = 99;
+
+    // Adiciona o tapete ao cenário
+    d = unionS(Tapete, d);
+    
+    
+
     Surface CSG;
     CSG = csgObject(p); CSG.id=2;
     d=unionS(CSG,d);
 
-    Surface SphereLeft;
-    SphereLeft.sd = sphereDist(p-vec3( -3.0,1.0, 4.0),1.0);
-    SphereLeft.color = vec3(0.1,0.6,0.7); SphereLeft.Ka=0.2; SphereLeft.Kd=0.4;SphereLeft.Ks=0.4; SphereLeft.id=3;
-    d=unionS(SphereLeft,d);
-    Surface OctPrism;
-    OctPrism.sd = octogonPrismDist(p-vec3( 3.0,0.8,5.0), 0.7, 0.25); OctPrism.id=4;
-    OctPrism.color = vec3(0.4,0.2,0.7); OctPrism.Ka=0.2; OctPrism.Kd=0.7;OctPrism.Ks=0.1;
-    d=unionS(OctPrism,d);
+    //Esfera esquerda
+    // Surface SphereLeft;
+    // SphereLeft.sd = sphereDist(p-vec3( -3.0,1.0, 4.0),1.0);
+    // SphereLeft.color = vec3(0.1,0.6,0.7); SphereLeft.Ka=0.2; SphereLeft.Kd=0.4;SphereLeft.Ks=0.4; SphereLeft.id=3;
+    // d=unionS(SphereLeft,d);
 
-    Surface Sphere;
-    Sphere.id=5;
-    Sphere.sd=sphereDist(p-vec3(4.0,1.0,2.0),1.0);
-    Sphere.Ka=0.2;Sphere.Kd=0.4;Sphere.Ks=0.4;Sphere.id=5;
-    Sphere.color=vec3(0.,1.0,0.);
-    d=unionS(d,Sphere);
+    // Panela simples substituindo SphereLeft
+    Surface panela;
+    {
+    // Parâmetros da rotação
+    float angPanela = iTime * 0.7; // velocidade da rotação
+
+    // Centro da panela
+    vec3 centroPanela = vec3(-3.0, -1.75, 4.0);
+
+    // Aplica rotação no espaço da panela (em torno do centro)
+    vec3 pPanela = p - centroPanela;
+    pPanela.xz = rotate2d(angPanela) * pPanela.xz;
+    pPanela += centroPanela;
+
+    // Corpo
+    vec3 pCorpo = pPanela - vec3(-3.0, 0.8, 4.0);
+    float corpoSD = max(length(pCorpo.xz) - 1.0, abs(pCorpo.y) - 0.25);
+
+    // Alça esquerda
+    vec3 pHandleL = pPanela - vec3(-2.0, 0.9, 4.0);
+    float alcaLSD = cylinderDist(pHandleL, vec3(0.0, 0.0, -0.3), vec3(0.0, 0.0, 0.3), 0.15);
+
+    // Alça direita
+    vec3 pHandleR = pPanela - vec3(-4.0, 0.9, 4.0);
+    float alcaRSD = cylinderDist(pHandleR, vec3(0.0, 0.0, -0.3), vec3(0.0, 0.0, 0.3), 0.15);
+
+    // Junta corpo e as duas alças
+    float panelaSD = min(corpoSD, min(alcaLSD, alcaRSD));
+
+    // --- TAMPA RETA ---
+    // vec3 tampaPos = vec3(-3.0, 1.05, 4.0);
+    // --- TAMPA ANIMADA (sobe e desce) ---
+    float animTampa = 0.09 * sin(iTime * 2.0); // amplitude e velocidade
+    vec3 tampaPos = vec3(-3.0, 1.05 + animTampa, 4.0);
+    float tampaSD = cylinderVerticalDist(pPanela - tampaPos, vec2(1.0, 0.05));
+
+    // --- SUPORTE DA TAMPA ---
+    vec3 suportePos = tampaPos + vec3(0.0, 0.08, 0.0);
+    float suporteSD = cylinderVerticalDist(pPanela - suportePos, vec2(0.13, 0.07));
+
+    // Junta tampa e suporte
+    float tampaCompletaSD = min(tampaSD, suporteSD);
+
+    // Junta tudo com a panela
+    float panelaCompletaSD = min(panelaSD, tampaCompletaSD);
+
+    panela.sd = panelaCompletaSD;
+    panela.color = vec3(0.7, 0.7, 0.7);
+    panela.Ka = 0.3; panela.Kd = 0.6; panela.Ks = 0.8;
+    panela.id = 10;
+}
+    d = unionS(panela, d);
+
+    // --- FRIGIDEIRA AO LADO DA PANELA ---
+    vec3 centroFrigideira = vec3(-1.0, 1.5, 4.0); // posição ao lado da panela
+
+    // Corpo da frigideira (cilindro baixo)
+    vec3 pFrigideira = p - centroFrigideira;
+    float corpoFrigideiraSD = max(length(pFrigideira.xz) - 1.1, abs(pFrigideira.y) - 0.10);
+
+    // Cabo (cilindro fino)
+    vec3 pCabo = p - (centroFrigideira + vec3(1.0, 0.0, 0.0)); // deslocado para a direita
+    float caboSD = cylinderDist(pCabo, vec3(0.0, 0.0, 0.0), vec3(1.2, 0.0, 0.0), 0.08);
+
+    // Junta corpo e cabo
+    float frigideiraSD = min(corpoFrigideiraSD, caboSD);
+
+    // --- TAMPA DA FRIGIDEIRA ANIMADA (sobe e desce) ---
+    float animTampaFrigideira = 0.05 * sin(iTime * 2.0 + 1.5); // fase diferente da panela
+    vec3 tampaFrigideiraPos = centroFrigideira + vec3(0.0, 0.13 + animTampaFrigideira, 0.0);
+    float tampaFrigideiraSD = cylinderVerticalDist(p - tampaFrigideiraPos, vec2(1.1, 0.05));
+
+    // Suporte da tampa
+    vec3 suporteFrigideiraPos = tampaFrigideiraPos + vec3(0.0, 0.07, 0.0);
+    float suporteFrigideiraSD = cylinderVerticalDist(p - suporteFrigideiraPos, vec2(0.13, 0.07));
+
+    // Junta tampa e suporte
+    float tampaCompletaFrigideiraSD = min(tampaFrigideiraSD, suporteFrigideiraSD);
+
+    // Junta tudo (frigideira + tampa)
+    float frigideiraCompletaSD = min(frigideiraSD, tampaCompletaFrigideiraSD);
+
+    Surface Frigideira;
+    Frigideira.sd = frigideiraCompletaSD;
+    Frigideira.color = vec3(0.2, 0.2, 0.2); // cor escura
+    Frigideira.Ka = 0.3; Frigideira.Kd = 0.6; Frigideira.Ks = 0.7;
+    Frigideira.id = 11;
+    d = unionS(Frigideira, d);
+
+
+
+    // --- PRATOS GIRANDO EM TORNO DA PANELA ---
+    float yPrato = 0.8; // mesma altura do centro da panela
+    vec3 centroPanela = vec3(-3.0, yPrato, 4.0); // centro da panela
+
+    float raioPrato = 2.5; // distância dos pratos ao centro da panela
+    float angulo = iTime * 0.7; // velocidade da rotação
+
+    // Prato 1
+    vec3 prato1Pos = centroPanela + vec3(
+        raioPrato * cos(angulo),
+        0.0,
+        raioPrato * sin(angulo)
+    );
+
+    // Prato 2 (oposto ao prato 1)
+    vec3 prato2Pos = centroPanela + vec3(
+        raioPrato * cos(angulo + PI),
+        0.0,
+        raioPrato * sin(angulo + PI)
+    );
+
+    float prato1SD = cylinderVerticalDist(p - prato1Pos, vec2(0.8, 0.03));
+    Surface Prato1;
+    Prato1.sd = prato1SD;
+    Prato1.color = vec3(0.95, 0.95, 0.85);
+    Prato1.Ka = 0.3; Prato1.Kd = 0.6; Prato1.Ks = 0.4;
+    Prato1.id = 20;
+    d = unionS(Prato1, d);
+
+    float prato2SD = cylinderVerticalDist(p - prato2Pos, vec2(0.8, 0.03));
+    Surface Prato2;
+    Prato2.sd = prato2SD;
+    Prato2.color = vec3(0.95, 0.95, 0.85);
+    Prato2.Ka = 0.3; Prato2.Kd = 0.6; Prato2.Ks = 0.4;
+    Prato2.id = 21;
+    d = unionS(Prato2, d);
+
+    // Surface OctPrism;
+    // OctPrism.sd = octogonPrismDist(p-vec3( 3.0,0.8,5.0), 0.7, 0.25); OctPrism.id=4;
+    // OctPrism.color = vec3(0.4,0.2,0.7); OctPrism.Ka=0.2; OctPrism.Kd=0.7;OctPrism.Ks=0.1;
+    // d=unionS(OctPrism,d);
+
+
+
+    // Surface Sphere;
+    // Sphere.id=5;
+    // Sphere.sd=sphereDist(p-vec3(4.0,1.0,2.0),1.0);
+    // Sphere.Ka=0.2;Sphere.Kd=0.4;Sphere.Ks=0.4;Sphere.id=5;
+    // Sphere.color=vec3(0.,1.0,0.);
+    // d=unionS(d,Sphere);
+
+    // Por este:
+    // --- Barco afundando ---
+   // vec3 barcoPos = vec3(4.0, 1.0, 2.0);
+   float alturaBarco = 1.0 + 0.3 * sin(iTime * 2.0); // sobe e desce com amplitude 0.3 e frequência 2
+   vec3 barcoPos = vec3(5.5 + 1.0, alturaBarco, 2.0); // desloca 1 unidade para a direita (eixo X)
+   vec3 pBarco = p - barcoPos;
+
+    // Casco: cilindro horizontal
+    float casco = cylinderDist(pBarco, vec3(-2.1, -0.5, 0.0), vec3(2.1, -0.5, 0.0), 1.0);
+    //float casco = cylinderDist(pBarco, vec3(0.0, -1.0, 0.0), vec3(0.0, 1.0, 0.0), 0.6);
+
+
+    // Corte superior para simular afundando
+    float corteAgua = planeDist(pBarco, vec3(0.0, 1.0, 0.0), -0.30); // só parte de baixo do barco
+    //float corteAgua = planeDist(pBarco, vec3(0.0, 0.0, 1.0), 0.1);  // ajustado para cortar pela frente
+
+    float barcoSDF = max(casco, corteAgua);
+
+    // Mastro (opcional)
+    float mastro = cylinderVerticalDist(pBarco - vec3(0.0, 0., 0.0), vec2(0.12, 0.5));
+    //float mastro = cylinderDist(pBarco - vec3(0.0, 0.0, 0.6), vec3(0.0, -0.3, 0.6), vec3(0.0, 1.0, 0.6), 0.1);
+
+    barcoSDF = min(barcoSDF, mastro);
+
+    Surface Barco;
+    Barco.sd = barcoSDF;
+    Barco.color = vec3(0.3, 0.2, 0.1); // marrom escuro
+    Barco.Ka = 0.2; Barco.Kd = 0.5; Barco.Ks = 0.3;
+    Barco.id = 5;
+    d = unionS(d, Barco);
+
+        // --- ÁGUA AZUL ONDULADA EMBAIXO DO BARCO ---
+    vec3 aguaCentro = vec3(6.0 + 1.0, 0.1, 2.0); // desloca 1 unidade para a direita (eixo X)
+    float raioAgua = 2.8; // raio da "poça" de água
+
+    // Efeito de onda: desloca a superfície da água em Y
+    float onda = 0.08 * sin(2.0 * PI * (p.x + p.z) * 0.3 + iTime * 0.7);
+
+    // SDF: plano em y=0 + onda, limitado a um disco
+    float aguaSD = max(
+        p.y - aguaCentro.y - onda, // plano ondulado
+        length((p - aguaCentro).xz) - raioAgua // disco
+    );
+
+    Surface Agua;
+    Agua.sd = aguaSD;
+    Agua.color = vec3(0.1, 0.4, 0.8); // azul da água
+    Agua.Ka = 0.4; Agua.Kd = 0.7; Agua.Ks = 0.3;
+    Agua.id = 80;
+    d = unionS(Agua, d);
+    // Cabine do capitão
+    vec3 cabinePos = barcoPos + vec3(0.0, -0.03, 0.0);
+    float cabineSD = boxDist(p - cabinePos, vec3(1.0, 0.3, 0.3));
+    barcoSDF = min(barcoSDF, cabineSD);
+
+    // Janela
+    vec3 janelaPos = cabinePos + vec3(0.0, 0.0, -0.41);
+    float janelaSD = boxDist(p - janelaPos, vec3(0.18, 0.12, 0.05));
+    barcoSDF = max(barcoSDF, -janelaSD);
+
+    // Superfície da cabine
+    Surface Cabine;
+    Cabine.sd = cabineSD;
+    Cabine.color = vec3(0.85, 0.85, 0.95);
+    Cabine.Ka = 0.3; Cabine.Kd = 0.6; Cabine.Ks = 0.3;
+    Cabine.id = 51;
+    d = unionS(Cabine, d);
+
+    // Superfície da janela
+    Surface Janela;
+    Janela.sd = janelaSD;
+    Janela.color = vec3(0.3, 0.5, 0.8);
+    Janela.Ka = 0.2; Janela.Kd = 0.7; Janela.Ks = 0.5;
+    Janela.id = 52;
+    d = unionS(Janela, d);
+
+
+// --- TRÊS MASTROS COM BANDEIRAS ONDULANDO ---
+// Posição base dos mastros (onde estava o OctPrism)
+    vec3 baseMastro = vec3(0.0, 0.0, 15.0);
+    float alturaMastro = 5.5; // triplo da altura original
+
+    for (int i = 0; i < 3; i++) {
+        float dx = float(i - 1) * 4; // espaçamento dos mastros no eixo X
+        vec3 mastroPos = baseMastro + vec3(dx, 0.0, 0.0); // alinhados no eixo X
+
+        // Mastro: cilindro vertical, bem mais alto
+        float mastroSD = cylinderVerticalDist(p - mastroPos, vec2(0.1, alturaMastro));
+        Surface Mastro;
+        Mastro.sd = mastroSD;
+        Mastro.color = vec3(0.7, 0.7, 0.7);
+        Mastro.Ka = 0.2; Mastro.Kd = 0.6; Mastro.Ks = 0.3;
+        Mastro.id = 30 + i;
+        d = unionS(Mastro, d);
+
+        // Bandeira: faixa animada com vento, presa na ponta do mastro
+        float largura = 1.0;
+        float altura = 0.5;
+        // Posição da ponta presa ao mastro (canto esquerdo da bandeira)
+        vec3 origem = mastroPos + vec3(-0.09, alturaMastro, -0.6);
+        vec3 pBandeira = p - origem;
+        // Move a origem para o canto da bandeira (em z = -largura)
+        //pBandeira.z += largura; 
+        // Rotaciona -70º para a direita em torno do eixo Y
+        float angulo = radians(-70.0);
+        mat2 rotY = mat2(cos(angulo), -sin(angulo), sin(angulo), cos(angulo));
+        vec2 xz = rotY * pBandeira.xz;
+        pBandeira.x = xz.x;
+        pBandeira.z = xz.y;
+        // Move de volta para o centro da bandeira
+        pBandeira.z -= largura;
+        float z = pBandeira.z;
+        float y = pBandeira.y;
+        float x = pBandeira.x - 0.10 * sin(2.0 * z + iTime * 1.2 + float(i) * 1.5);
+        float bandeiraSD = max(max(abs(z) - largura, abs(y) - altura), abs(x) - 0.02);
+
+        Surface Bandeira;
+        Bandeira.sd = bandeiraSD;
+        // --- TEXTURA NA BANDEIRA 0 ---
+        if (i == 0) {
+            float u = (z + largura) / (2.0 * largura);
+            float v = 1.0 - (y + altura) / (2.0 * altura);
+            vec2 uv = vec2(u, v);
+            Bandeira.color = texture(iChannel4, uv).rgb * 0.7;
+        }
+        if (i == 1) {
+            float u = (z + largura) / (2.0 * largura);
+            float v = 1.0 - (y + altura) / (2.0 * altura);
+            vec2 uv = vec2(u, v);
+            Bandeira.color = texture(iChannel5, uv).rgb * 0.7;
+        }
+        if (i == 2) {
+            float u = (z + largura) / (2.0 * largura);
+            float v = 1.0 - (y + altura) / (2.0 * altura);
+            vec2 uv = vec2(u, v);
+            Bandeira.color = texture(iChannel6, uv).rgb * 0.7;
+        }
+        Bandeira.Ka = 0.3; Bandeira.Kd = 0.7; Bandeira.Ks = 0.5;
+        Bandeira.id = 40 + i;
+        d = unionS(Bandeira, d);
+    }
+        
+// // --- PÓDIO DE 3 LUGARES ---
+// // Posição base do pódio (mais para trás no eixo Z)
+// vec3 podiumBase = vec3(0.0, 0.0, 10.0); // mais para trás
+
+// // Alturas dos degraus (3x mais alto)
+// float h1 = 0.7 * 3.0; // 1º lugar (mais alto)
+// float h2 = 0.45 * 3.0; // 2º lugar
+// float h3 = 0.3 * 3.0; // 3º lugar
+
+// // Largura/profundidade dos degraus (5x mais largo)
+// vec3 size1 = vec3(0.45 * 5.0, h1, 0.45 * 5.0);
+// vec3 size2 = vec3(0.45 * 5.0, h2, 0.45 * 5.0);
+// vec3 size3 = vec3(0.45 * 5.0, h3, 0.45 * 5.0);
+
+// // 1º lugar (centro)
+// vec3 pos1 = podiumBase + vec3(0.0, h1/2.0, 0.0);
+// float podium1SD = boxDist(p - pos1, size1);
+
+// // 2º lugar (esquerda)
+// vec3 pos2 = podiumBase + vec3(-0.55 * 5.0, h2/2.0, 0.0);
+// float podium2SD = boxDist(p - pos2, size2);
+
+// // 3º lugar (direita)
+// vec3 pos3 = podiumBase + vec3(0.55 * 5.0, h3/2.0, 0.0);
+// float podium3SD = boxDist(p - pos3, size3);
+
+// // Junta os três degraus
+// float podiumSD = min(podium1SD, min(podium2SD, podium3SD));
+
+// // Cores diferentes para cada degrau
+// vec3 podiumColor = vec3(0.9); // padrão: branco
+// if (podiumSD == podium1SD) podiumColor = vec3(1.0, 0.85, 0.2); // ouro
+// if (podiumSD == podium2SD) podiumColor = vec3(0.7, 0.7, 0.7); // prata
+// if (podiumSD == podium3SD) podiumColor = vec3(0.8, 0.5, 0.2); // bronze
+
+// Surface Podium;
+// Podium.sd = podiumSD;
+// Podium.color = podiumColor;
+// Podium.Ka = 0.3; Podium.Kd = 0.6; Podium.Ks = 0.3;
+// Podium.id = 70;
+// d = unionS(Podium, d);
+
+    // --- PAREDE VERTICAL ATRÁS DOS MASTROS ---
+    float paredeZ = 4.5; // valor maior que o Z dos mastros (ajuste conforme necessário)
+    float paredeSD = planeDist(p, vec3(0.0, 0.0, -0.20), -paredeZ);
+
+    Surface Parede;
+    Parede.sd = paredeSD;
+    Parede.color = vec3(0.05, 0.02, 0.01); // marrom mais escuro
+    Parede.Ka = 0.3; Parede.Kd = 0.6; Parede.Ks = 0.1;
+    Parede.id = 100;
+    d = unionS(Parede, d);
+
+    // --- QUADRO COM MOLDURA NA FRENTE DA PAREDE ---
+    float quadroY = 1.2; // altura do centro do quadro
+    float quadroX = 0.01; // centralizado em X
+    float quadroLargura = 3.0;
+    float quadroAltura = 3.0;
+    float molduraEspessura = 0.1;
+
+    // Moldura (box maior)
+    vec3 centroMoldura = vec3(quadroX, 3.0, 20.0); // levemente à frente da parede
+    float molduraSD = boxDist(p - centroMoldura, vec3(quadroLargura/2.0 + molduraEspessura, quadroAltura/2.0 + molduraEspessura, 0.06));
+
+    Surface Moldura;
+    Moldura.sd = molduraSD;
+    Moldura.color = vec3(0.25, 0.15, 0.05); // marrom escuro
+    Moldura.Ka = 0.3; Moldura.Kd = 0.6; Moldura.Ks = 0.2;
+    Moldura.id = 201;
+    d = unionS(Moldura, d);
+
+    // Quadro (box menor, dentro da moldura)
+    vec3 centroQuadro = centroMoldura;
+    float quadroSD = boxDist(p - centroQuadro, vec3(quadroLargura/2.0, quadroAltura/2.0, 0.03));
+
+    Surface Quadro;
+    Quadro.sd = quadroSD;
+    Quadro.color = vec3(0.95, 0.95, 0.85); // cor clara (ou troque por textura)
+    Quadro.Ka = 0.4; Quadro.Kd = 0.7; Quadro.Ks = 0.1;
+    Quadro.id = 202;
+    d = unionS(Quadro, d);
+
     return d;
 }
+
+
 
 Surface rayMarching(vec3 Cam, vec3 rd)
 {
@@ -665,6 +1290,14 @@ vec3 getLight(vec3 p,Surface s,vec3 Cam)
     float l1=dot(N,lightDir1);
     l1= clamp(l1,0.0,1.0);
 
+    if(s.id == 1) 
+    {
+    // Reaplica textura no plano para garantir iluminação correta
+    vec2 uv = p.xz * 0.25;
+    uv = fract(uv);
+    s.color = texture(iChannel1, uv).rgb;
+    }
+
     if(s.id==3)
     {
             float theta = acos(N.z);
@@ -685,10 +1318,21 @@ vec3 getLight(vec3 p,Surface s,vec3 Cam)
 
     }
 
-        if(s.id==2)
-        {
-            s.color=boxmap(iChannel0,p,N,1.0);
-        }
+    if(s.id == 6)
+    {
+    // Mapeamento procedural para efeito cortado
+    s.color=boxmap(iChannel0,p,N,1.0);
+    float grain = sin(30.0 * p.x) * cos(30.0 * p.z);
+    grain *= 0.3 + 0.7 * perlin_noise(p.xz * 10.0);
+    s.color = mix(s.color, vec3(1.0, 0.9, 0.5), grain);  // parte interna mais clara
+    }
+
+
+    if(s.id==2)
+    {
+        s.color=boxmap(iChannel0,p,N,1.0);
+    }
+
 
     //phong contrib
     vec3 Is=vec3(0.);
