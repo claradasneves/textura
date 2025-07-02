@@ -8,6 +8,7 @@ uniform sampler2D iChannel3; // Quadro
 uniform sampler2D iChannel4; // Bandeira USP
 uniform sampler2D iChannel5; // Bandeira Brasil
 uniform sampler2D iChannel6; // Bandeira SP
+uniform sampler2D iChannel10; // Tapete
 uniform vec2 iResolution;
 uniform vec4 iMouse;
 uniform float iTime;
@@ -679,12 +680,14 @@ Surface csgObject(vec3 p)
 
     // Tronco (cilindro vertical, mais alto)
     vec3 pTronco = p - centroArvore;
-    float troncoAltura = 1.1;
+    float troncoAnim = max(0.85, 0.8 + 0.5 * sin(iTime * 1.2)); // limite mínimo de 0.85
+    float troncoAltura = 1.35 * troncoAnim; // aumentada a altura base do tronco
     float troncoSD = cylinderVerticalDist(pTronco, vec2(0.08, troncoAltura));
 
     // Copa principal (esfera maior em cima do tronco)
     vec3 copaPos = centroArvore + vec3(0.0, troncoAltura, 0.0);
-    float copaSD = length(p - copaPos) - 0.32;
+    float copaAnim = max(0.85, 0.9 + 0.1 * sin(iTime * 1.2)); // limite mínimo de 0.85
+    float copaSD = length(p - copaPos) - (0.32 * copaAnim);
 
     // Coordenadas UV esféricas para textura
     vec3 dir = normalize(p - copaPos);
@@ -863,12 +866,14 @@ Surface getDist(vec3 p)
 
     // Tronco (cilindro vertical, mais alto)
     vec3 pTronco = p - centroArvore;
-    float troncoAltura = 1.1;
+    float troncoAnim = max(0.5, 1.3 + 0.5 * sin(iTime * 1.2)); // limite mínimo de 0.5
+    float troncoAltura = 1.3 * troncoAnim;
     float troncoSD = cylinderVerticalDist(pTronco, vec2(0.08, troncoAltura));
 
     // Copa principal (esfera maior em cima do tronco)
     vec3 copaPos = centroArvore + vec3(0.0, troncoAltura, 0.0);
-    float copaSD = length(p - copaPos) - 0.32;
+    float copaAnim = max(0.85, 0.9 + 1.0 * sin(iTime * 1.2)); // limite mínimo de 0.85
+    float copaSD = length(p - copaPos) - (0.32 * copaAnim);
 
     // Coordenadas UV esféricas para textura
     vec3 dir = normalize(p - copaPos);
@@ -1099,7 +1104,7 @@ Surface getDist(vec3 p)
     float barcoSDF = max(casco, corteAgua);
 
     // Mastro (opcional)
-    float mastro = cylinderVerticalDist(pBarco - vec3(0.0, 0., 0.0), vec2(0.12, 0.5));
+    float mastro = cylinderVerticalDist(pBarco - vec3(0.0, 0.0, 0.6), vec2(0.12, 0.5));
     //float mastro = cylinderDist(pBarco - vec3(0.0, 0.0, 0.6), vec3(0.0, -0.3, 0.6), vec3(0.0, 1.0, 0.6), 0.1);
 
     barcoSDF = min(barcoSDF, mastro);
@@ -1356,6 +1361,7 @@ float calcSoftshadow( in vec3 ro, in vec3 rd, in float mint, in float tmax )
     {
                 float h = getDist( ro + t*rd ).sd;
         float s = clamp(8.0*h/t,0.0,1.0);
+       
         res = min( res, s );
         t += clamp( h, 0.01, 0.25 );
         if( res<0.001 || t>tmax ) break;

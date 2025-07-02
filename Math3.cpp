@@ -221,6 +221,7 @@ int main()
     unsigned int bandeiraTexture02 = loadTexture("../textures/ShaderToyTextures/brasil.png");
     unsigned int bandeiraTexture03 = loadTexture("../textures/ShaderToyTextures/sao-paulo.png");
     unsigned int quadroTexture = loadTexture("../textures/ShaderToyTextures/each.jpg");
+    unsigned int tapeteTexture = loadTexture("../textures/ShaderToyTextures/tapete.webp");
 
 
     glGenTextures(1, &iChannel_0);
@@ -430,6 +431,7 @@ double * mouse = (double *) malloc(sizeof(double)*4);
         BufferAprogram.setSampler("iChannel4",4);
         BufferAprogram.setSampler("iChannel5",5);
         BufferAprogram.setSampler("iChannel6",6);
+        BufferAprogram.setSampler("iChannel10",10);
         BufferAprogram.setVec2("iResolution",resolution) ;
         BufferAprogram.setVec4("iMouse", mouse);
         BufferAprogram.setFloat("iTime",currentTime);
@@ -449,6 +451,8 @@ double * mouse = (double *) malloc(sizeof(double)*4);
         glBindTexture(GL_TEXTURE_2D, bandeiraTexture02); // Brasil
         glActiveTexture(GL_TEXTURE6);
         glBindTexture(GL_TEXTURE_2D, bandeiraTexture03); // São Paulo
+        glActiveTexture(GL_TEXTURE10);
+        glBindTexture(GL_TEXTURE_2D, tapeteTexture); // tapete vermelho
        //glActiveTexture(GL_TEXTURE1);
         //glBindTexture(GL_TEXTURE_2D, iChannel_3);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT,0);
