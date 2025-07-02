@@ -667,8 +667,8 @@ Surface csgObject(vec3 p)
     Surface corte;
     corte.sd = fatia;
     corte.color = vec3(0.0);
-    corte.Ka = 0.0; corte.Kd = 0.0; corte.Ks = 0.0;
-    corte.id = -1; // id neutro para corte
+    corte.Ka = 0.5; corte.Kd = 0.7; corte.Ks = 0.0;
+    corte.id = 6;
 
     Surface resultado = subtractionS(queijo, corte);
 
@@ -782,7 +782,9 @@ Surface getDist(vec3 p)
     uv = fract(uv);         // Repete textura em padrão infinito
     Plane.color = texture(iChannel1, uv).rgb;
 
-    Plane.Ka = 0.2; Plane.Kd = 0.4; Plane.Ks = 0.4;
+    // ESCURECIMENTO DO AMBIENTE
+    // Chão
+    Plane.Ka = 0.03; Plane.Kd = 0.08; Plane.Ks = 0.1;
 
     // float dp = planeDist(p,vec3 (0.0,1.0,0.0),0.0);
     // Surface Plane;
@@ -809,7 +811,9 @@ Surface getDist(vec3 p)
     Surface Tapete;
     Tapete.sd = tapeteSD;
     Tapete.color = corTapete;
-    Tapete.Ka = 0.5; Tapete.Kd = 0.7; Tapete.Ks = 0.1;
+    // ESCURECIMENTO DO AMBIENTE
+    // Tapete
+    Tapete.Ka = 0.12; Tapete.Kd = 0.18; Tapete.Ks = 0.07;
     Tapete.id = 99;
 
     // Adiciona o tapete ao cenário
@@ -1256,7 +1260,11 @@ Surface getDist(vec3 p)
     Surface Parede;
     Parede.sd = paredeSD;
     Parede.color = vec3(0.05, 0.02, 0.01); // marrom mais escuro
-    Parede.Ka = 0.3; Parede.Kd = 0.6; Parede.Ks = 0.1;
+
+    // ESCURECIMENTO DO AMBIENTE
+    // Parede
+    Parede.Ka = 0.02; Parede.Kd = 0.06; Parede.Ks = 0.05;
+
     Parede.id = 100;
     d = unionS(Parede, d);
 
@@ -1273,7 +1281,11 @@ Surface getDist(vec3 p)
     Surface Quadro;
     Quadro.sd = quadroSD;
     Quadro.color = vec3(0.95, 0.95, 0.85); // cor clara (ou troque por textura)
-    Quadro.Ka = 0.4; Quadro.Kd = 0.7; Quadro.Ks = 0.1;
+
+    // ESCURECIMENTO DO AMBIENTE
+    // Quadro
+    Quadro.Ka = 0.04; Quadro.Kd = 0.09; Quadro.Ks = 0.05;
+
     Quadro.id = 202;
     d = unionS(Quadro, d);
     return d;

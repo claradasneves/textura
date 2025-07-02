@@ -220,7 +220,7 @@ int main()
     unsigned int bandeiraTexture01 = loadTexture("../textures/ShaderToyTextures/logo-azul-usp.jpg");
     unsigned int bandeiraTexture02 = loadTexture("../textures/ShaderToyTextures/brasil.png");
     unsigned int bandeiraTexture03 = loadTexture("../textures/ShaderToyTextures/sao-paulo.png");
-    unsigned int quadroTexture = loadTexture("../textures/ShaderToyTextures/RockTiles.jpg");
+    unsigned int quadroTexture = loadTexture("../textures/ShaderToyTextures/each.jpg");
 
 
     glGenTextures(1, &iChannel_0);
