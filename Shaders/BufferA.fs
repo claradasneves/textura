@@ -1507,8 +1507,9 @@ vec3 col;
     float bm = mix(-0.25*PI,0.25*PI,iMouse.z*mo.y);
 
     vec3 Target = vec3 (1.0,1.0,6.0);
-    Cam.xz+=length(Cam-Target)*vec2(cos(am),sin(am));;
-    Cam.yz+=length(Cam-Target)*vec2(cos(bm),sin(bm));;
+    float zoom = 1.0; // diminua para menos zoom, aumente para mais zoom
+    Cam.xz += zoom * length(Cam-Target) * vec2(cos(am), sin(am));
+    Cam.yz += zoom * length(Cam-Target) * vec2(cos(bm), sin(bm));
     mat3 Ca = setCamera(Cam,Target);
     rd=Ca*rd;
 
