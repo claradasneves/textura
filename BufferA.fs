@@ -12,6 +12,8 @@ uniform vec2 iResolution;
 uniform vec4 iMouse;
 uniform float iTime;
 uniform int iFrame;
+uniform vec3 iCamPos;
+uniform vec3 iTarget;
 
 #define MAX_STEPS 100
 #define MAX_DIST 200.
@@ -840,9 +842,18 @@ Surface getDist(vec3 p)
     // SDF final do queijo com fatia
     float queijoFinalSD = max(queijoSD, -fatia);
 
+    // --- COR MAIS CLARA NA FATIA ---
+    float angFatia = atan(pQueijo.x, pQueijo.z); // ângulo polar do ponto
+    float angMeio = 0.0; // direção central da fatia (ajuste se quiser)
+    float abertura = radians(40.0); // mesma abertura da fatia
+    float dentroFatia = step(-abertura, angFatia - angMeio) * step(angFatia - angMeio, abertura);
+
+    // Cor base
+    vec3 corQueijo = mix(vec3(1.2, 1.0, 0.3), vec3(1.6, 1.4, 0.7), dentroFatia);
+
     Surface Queijo;
     Queijo.sd = queijoFinalSD;
-    Queijo.color = vec3(1.2, 1.0, 0.3);
+    Queijo.color = corQueijo;
     Queijo.Ka = 0.3; Queijo.Kd = 0.5; Queijo.Ks = 0.2;
     Queijo.id = 2;
     d = unionS(Queijo, d);
@@ -1400,7 +1411,7 @@ vec3 getLight(vec3 p,Surface s,vec3 Cam)
     s.Kd *= 0.3; // luz difusa mais fraca
     s.Ks *= 0.3; // luz especular mais fraca
     }
-    
+
     if(s.id == 60) {
         // Copa da árvore: não aplicar textura de queijo, usar apenas s.color
     }
