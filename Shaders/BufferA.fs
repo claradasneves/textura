@@ -1483,7 +1483,7 @@ vec3 col;
 
 
     vec2 mo = (iMouse.xy )/iResolution.xy;
-    vec3 Cam= vec3 (-2.0,-1.0,1.0);
+    vec3 Cam= vec3 (0.0,-3.0,0.5);
     float am = mix(-0.5*PI,0.5*PI,iMouse.z*mo.x);
     float bm = mix(-0.25*PI,0.25*PI,iMouse.z*mo.y);
 
