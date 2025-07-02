@@ -15,9 +15,9 @@ uniform int iFrame;
 uniform vec3 iCamPos;
 uniform vec3 iTarget;
 
-#define MAX_STEPS 100
+#define MAX_STEPS 64
 #define MAX_DIST 200.
-#define SURF_DIST .01
+#define SURF_DIST 0.01
 #define EPSILON .01
 #define PI 3.14159265359
 float dot2( in vec2 v ) { return dot(v,v); }
@@ -1476,8 +1476,10 @@ vec3 getLight(vec3 p,Surface s,vec3 Cam)
     {
         Is1=LightColor1*s.Ks*pow(dotRN1,exp);//*calcSoftshadow( p+10.0*EPSILON*R1, R1, 0.1, 3.0 );
     }
-   float  ss =calcSoftshadow( p+10.0*EPSILON*lightDir,lightDir, 0.1, 3.0 );
-   float ss1=calcSoftshadow( p+10.0*EPSILON*lightDir1,lightDir1, 0.1, 3.0 );
+    //float  ss =calcSoftshadow( p+10.0*EPSILON*lightDir,lightDir, 0.1, 3.0 );
+    //float ss1=calcSoftshadow( p+10.0*EPSILON*lightDir1,lightDir1, 0.1, 3.0 );
+    float ss = 1.0;
+    float ss1 = 1.0;
     vec3 c = s.color*s.Ka+(s.color*l*s.Kd)*ss+(s.color*l1*s.Kd)*ss1+Is+ Is1;
     //Surface sh = rayMarching(p+100.0*EPSILON*lightDir,lightDir);
     //if(sh.sd<length(p-lightPos)) c*=0.2;
